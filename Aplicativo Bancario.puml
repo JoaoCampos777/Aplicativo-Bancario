@@ -1,0 +1,106 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam linetype ortho
+skinparam shadowing false
+skinparam usecase {
+  BackgroundColor White
+  BorderColor Black
+}
+skinparam package {
+  BorderColor #888
+  BackgroundColor #f9f9f9
+}
+
+rectangle "Aplicativo Bancário" as Sistema {
+  package "Acesso" as P_Acesso {
+    (Cadastrar-se) as UC_Cadastrar
+    (Autenticar-se) as UC_Login
+    (Recuperar Senha) as UC_RecSenha
+    (Validar Credenciais) as UC_ValCred <<internal>>
+    (Validar Identidade) as UC_ValId <<internal>>
+  }
+
+  package "Consultas" as P_Consulta {
+    (Consultar Saldo) as UC_Saldo
+    (Ver Extrato) as UC_Extrato
+  }
+
+  package "Pagamentos & Transferências" as P_Pagto {
+    (Transferir via PIX) as UC_PIX
+    (Transferir TED/DOC) as UC_TED
+    (Pagar Boleto) as UC_Boleto
+    (Depositar Cheque por Imagem) as UC_DepCheque
+  }
+
+  package "Cartão & Limites" as P_Cartao {
+    usecase UC_Cartao as "Gerenciar Cartão\n(Bloquear/Desbloquear)"
+    (Configurar Limites) as UC_Limites
+  }
+
+  package "Notificações" as P_Notif {
+    (Receber Notificações) as UC_Notif
+    (Configurar Preferências de Notificação) as UC_PrefNotif <<opcional>>
+  }
+
+  package "Suporte" as P_Suporte {
+    (Abrir Chamado de Suporte) as UC_Suporte
+  }
+
+  (Sair) as UC_Sair
+}
+
+' ===== include/extend com cor (usar .. para tracejado) =====
+UC_Login ..[#red]> UC_ValCred : <<include>>
+UC_RecSenha ..[#red]> UC_ValId : <<include>>
+
+UC_PIX ..[#orange]> UC_Login : <<include>>
+UC_TED ..[#orange]> UC_Login : <<include>>
+UC_Boleto ..[#orange]> UC_Login : <<include>>
+UC_DepCheque ..[#orange]> UC_Login : <<include>>
+UC_Cartao ..[#purple]> UC_Login : <<include>>
+UC_Limites ..[#purple]> UC_Login : <<include>>
+
+UC_Notif <..[#green] UC_PrefNotif : <<extend>>
+
+' ===== Atores =====
+actor "Cliente" as AtorCliente
+actor "Atendente de Suporte" as AtorSuporte
+actor "Sistema de Autenticação" as SSO <<sistema externo>>
+actor "Antifraude" as Antifraude <<sistema externo>>
+actor "Processador de Pagamentos" as Payments <<sistema externo>>
+actor "Serviço de Notificações" as PushSvc <<sistema externo>>
+
+' ===== Ligações dos atores (com cor por grupo) =====
+AtorCliente -[#red]- UC_Cadastrar
+AtorCliente -[#red]- UC_Login
+AtorCliente -[#red]- UC_RecSenha
+
+AtorCliente -[#blue]- UC_Saldo
+AtorCliente -[#blue]- UC_Extrato
+
+AtorCliente -[#orange]- UC_PIX
+AtorCliente -[#orange]- UC_TED
+AtorCliente -[#orange]- UC_Boleto
+AtorCliente -[#orange]- UC_DepCheque
+
+AtorCliente -[#purple]- UC_Cartao
+AtorCliente -[#purple]- UC_Limites
+
+AtorCliente -[#green]- UC_Notif
+AtorCliente -[#green]- UC_PrefNotif
+
+AtorCliente -[#gray]- UC_Suporte
+AtorCliente -[#black]- UC_Sair
+
+AtorSuporte -[#gray]- UC_Suporte
+
+SSO -[#red]- UC_ValCred
+Antifraude -[#orange]- UC_PIX
+Antifraude -[#orange]- UC_TED
+Payments -[#orange]- UC_PIX
+Payments -[#orange]- UC_TED
+Payments -[#orange]- UC_Boleto
+PushSvc -[#green]- UC_Notif
+@enduml
